@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:7.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: [ "CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      target: runtime
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    env_file:
+      - env/.env.${APP_MODE:?set APP_MODE to development|test|production}
+    environment:
+      APP_MODE: ${APP_MODE:?set APP_MODE to development|test|production}
+    command: >
+      bash -lc '
+      if [ "$APP_MODE" = "development" ]; then
+        exec /opt/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload;
+      elif [ "$APP_MODE" = "test" ]; then
+        echo "Hook your test runner here (pytest)"; sleep infinity;
+      elif [ "$APP_MODE" = "production" ]; then
+        exec /opt/venv/bin/gunicorn app.main:app -k uvicorn.workers.UvicornWorker --workers 4 --threads 4 --bind 0.0.0.0:8000;
+      else
+        echo "Invalid APP_MODE: $APP_MODE (use development|test|production)"; exit 64;
+      fi'
+
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -fsS http://127.0.0.1:8000/health || exit 1" ]
+    restart: unless-stopped
+
+volumes:
+  mongo_data:

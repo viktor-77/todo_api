@@ -1,0 +1,42 @@
+# IDE / Editor settings
+.idea/
+.vscode/
+
+# Python cache / bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+
+# Virtual environments
+.venv/
+venv/
+
+# Environment configuration
+.env
+.env.*
+env/.env.development
+env/.env.test
+env/.env.production
+!env/*.example
+
+# MongoDB data volume
+mongo_data/
+
+# Build and distribution artifacts
+build/
+dist/
+*.egg-info/
+
+# Test and lint caches
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Logs
+*.log
